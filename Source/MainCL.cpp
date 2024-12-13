@@ -16,6 +16,7 @@
 
 constexpr static double maxRatio = 10;
 constexpr static double minRatio = 0.1;
+constexpr static int bufferSize = 4096;
 
 //==============================================================================
 int pvoc (int argc, char* argv[])
@@ -69,8 +70,8 @@ int pvoc (int argc, char* argv[])
 		0
 	));
 
-	AudioSampleBuffer inputBuffer(reader->numChannels, 4096 * maxRatio);
-	AudioSampleBuffer outputBuffer(reader->numChannels, 4096);
+	AudioSampleBuffer inputBuffer(reader->numChannels, bufferSize * maxRatio);
+	AudioSampleBuffer outputBuffer(reader->numChannels, bufferSize);
 	
 	ltfat_pv_state_s* pv{nullptr};
 	int status = ltfat_pv_init_s(maxRatio, reader->numChannels, 4096, &pv);
@@ -82,15 +83,15 @@ int pvoc (int argc, char* argv[])
 	bool valid = true;
 	int readerPos = 0;
 	while (valid && !reader->input->isExhausted()) {
-		int inLen = (int)ltfat_pv_nextinlen_s(pv, 4096);
+		int inLen = (int)ltfat_pv_nextinlen_s(pv, bufferSize);
 		valid = reader->read(&inputBuffer, 0, inLen, readerPos, true, true);
 		readerPos += inLen;
 		auto inPtr = const_cast<const float**>( inputBuffer.getArrayOfReadPointers() );
 		for(int ch=0; ch < reader->numChannels; ch++) {
 			outPtr[ch] = outputBuffer.getWritePointer(ch, 0);
         }
-		ltfat_pv_execute_s(pv, inPtr, inLen, reader->numChannels, timeRatio, 4096, outPtr);
-		writer->writeFromAudioSampleBuffer(outputBuffer, 0, 4096);
+		ltfat_pv_execute_s(pv, inPtr, inLen, reader->numChannels, timeRatio, bufferSize, outPtr);
+		writer->writeFromAudioSampleBuffer(outputBuffer, 0, bufferSize);
 	}
 	writer->flush();
     return 0;
