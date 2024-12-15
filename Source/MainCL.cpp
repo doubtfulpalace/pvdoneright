@@ -72,7 +72,9 @@ int pvoc (int argc, char* argv[])
 
 	AudioSampleBuffer inputBuffer(reader->numChannels, bufferSize * maxRatio);
 	AudioSampleBuffer outputBuffer(reader->numChannels, bufferSize);
-	
+    inputBuffer.clear();
+    outputBuffer.clear();
+    
 	ltfat_pv_state_s* pv{nullptr};
 	int status = ltfat_pv_init_s(maxRatio, reader->numChannels, 4096, &pv);
 	if (status == LTFATERR_FAILED) {
